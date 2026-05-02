@@ -1,13 +1,99 @@
 {% extends 'base.html' %}
 {% block content %}
-<div style="text-align: center; padding: 4rem 2rem;">
-    <h1 style="font-size: 3rem; margin-bottom: 1rem;">Welcome to Goodreads</h1>
-    <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 2rem auto;">
-        Your personal library and reading companion. Upload books, listen with AI-powered text-to-speech, and track your reading journey.
-    </p>
-    <div>
-        <a href="{{ url_for('signup') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem; margin-right: 1rem;">Start Reading Now</a>
-        <a href="{{ url_for('catalog') }}" class="btn" style="font-size: 1.2rem; padding: 1rem 2rem; background: #ddd; color: var(--text-color);">Browse Library</a>
+
+<style>
+.hero-section {
+    text-align: center;
+    padding: 4rem 2rem 2rem 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    margin-bottom: 3rem;
+}
+.hero-section h1 { font-size: 3rem; margin-bottom: 1rem; color: #a67c00; }
+.hero-section p { font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 2rem auto; }
+.hero-buttons { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+
+.quote-section {
+    margin: 2rem auto;
+    max-width: 700px;
+    padding: 2rem 2rem 2rem 3rem;
+    background: white;
+    border-left: 5px solid var(--primary-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(131, 56, 236, 0.1);
+    position: relative;
+    min-height: 100px;
+}
+.quote-text { font-size: 1.3rem; font-style: italic; color: var(--text-color); line-height: 1.8; margin-bottom: 0.5rem; transition: opacity 0.5s ease; }
+.quote-author { font-size: 1rem; color: var(--primary-color); font-weight: bold; transition: opacity 0.5s ease; }
+.quote-icon { font-size: 4rem; color: var(--primary-color); opacity: 0.15; position: absolute; top: 10px; left: 15px; line-height: 1; }
+
+.features-section { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin: 3rem 0; }
+.feature-card { background: white; border-radius: 12px; padding: 2rem; width: 180px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.07); transition: transform 0.3s ease; }
+.feature-card:hover { transform: translateY(-5px); }
+.feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.feature-card h3 { font-size: 1rem; color: var(--text-color); margin: 0; }
+
+.stats-section { display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin: 2rem 0; padding: 2rem; background: var(--primary-color); border-radius: 12px; }
+.stat-item { text-align: center; }
+.stat-number { font-size: 2.5rem; font-weight: bold; color: white; }
+.stat-label { font-size: 0.9rem; color: rgba(255,255,255,0.8); }
+</style>
+
+<div class="hero-section">
+    <h1>📚 Welcome to Goodreads</h1>
+    <p>Your personal library and reading companion. Upload books, listen with text-to-speech, and track your reading journey.</p>
+    <div class="hero-buttons">
+        <a href="{{ url_for('signup') }}" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Start Reading Now</a>
+        <a href="{{ url_for('catalog') }}" class="btn" style="font-size: 1.1rem; padding: 0.8rem 2rem; background: #ddd; color: var(--text-color);">Browse Library</a>
     </div>
 </div>
+
+<div class="quote-section">
+    <div class="quote-icon">"</div>
+    <div class="quote-text" id="quote-text">A reader lives a thousand lives before he dies. The man who never reads lives only one.</div>
+    <div class="quote-author" id="quote-author">— George R.R. Martin</div>
+</div>
+
+<div class="features-section">
+    <div class="feature-card"><div class="feature-icon">📖</div><h3>Read Online</h3></div>
+    <div class="feature-card"><div class="feature-icon">🔊</div><h3>Text to Speech</h3></div>
+    <div class="feature-card"><div class="feature-icon">🌐</div><h3>Marathi Support</h3></div>
+    <div class="feature-card"><div class="feature-icon">📊</div><h3>Track Progress</h3></div>
+</div>
+
+<div class="stats-section">
+    <div class="stat-item"><div class="stat-number">∞</div><div class="stat-label">Books to Explore</div></div>
+    <div class="stat-item"><div class="stat-number">2</div><div class="stat-label">Languages Supported</div></div>
+    <div class="stat-item"><div class="stat-number">24/7</div><div class="stat-label">Always Available</div></div>
+</div>
+
+<script>
+const quotes = [
+    { text: "A reader lives a thousand lives before he dies. The man who never reads lives only one.", author: "— George R.R. Martin" },
+    { text: "Not all those who wander are lost.", author: "— J.R.R. Tolkien" },
+    { text: "The more that you read, the more things you will know.", author: "— Dr. Seuss" },
+    { text: "पुस्तक म्हणजे एक बाग जी खिशात मावते.", author: "— मराठी सुविचार" },
+    { text: "वाचाल तर वाचाल.", author: "— मराठी म्हण" },
+    { text: "Books are a uniquely portable magic.", author: "— Stephen King" },
+    { text: "Reading is dreaming with open eyes.", author: "— Anissa Trisdianty" },
+    { text: "ज्ञान हेच सामर्थ्य आहे.", author: "— मराठी सुविचार" },
+];
+let currentQuote = 0;
+function changeQuote() {
+    const textEl = document.getElementById('quote-text');
+    const authorEl = document.getElementById('quote-author');
+    textEl.style.opacity = '0';
+    authorEl.style.opacity = '0';
+    setTimeout(() => {
+        currentQuote = (currentQuote + 1) % quotes.length;
+        textEl.textContent = quotes[currentQuote].text;
+        authorEl.textContent = quotes[currentQuote].author;
+        textEl.style.opacity = '1';
+        authorEl.style.opacity = '1';
+    }, 500);
+}
+setInterval(changeQuote, 4000);
+</script>
+
 {% endblock %}
