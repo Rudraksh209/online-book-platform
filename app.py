@@ -18,6 +18,13 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 # 50MB max upload
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Auto-initialize database tables on startup
+try:
+    init_db()
+    print('Database tables initialized!')
+except Exception as e:
+    print(f'DB init warning: {e}')
+
 # --- Authentication Decorator ---
 def login_required(f):
     @wraps(f)
