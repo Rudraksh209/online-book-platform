@@ -10,6 +10,22 @@ from pdf_extractor import extract_text_from_pdf
 
 load_dotenv()
 
+# Admin Configuration
+ADMIN_EMAIL = 'rudrakshgoswami209@gmail.com'
+
+def is_admin():
+    return session.get('user_email') == ADMIN_EMAIL
+
+def admin_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_admin():
+            flash('Access denied. Admin only!', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key_for_dev')
 app.config['UPLOAD_FOLDER'] = os.path.join('uploads')
@@ -59,6 +75,7 @@ def login():
                 if user and bcrypt.checkpw(password, user['password_hash'].encode('utf-8')):
                     session['user_id'] = user['id']
                     session['user_name'] = user['name']
+                    session['user_email'] = user['email']
                     flash('Login successful!', 'success')
                     return redirect(url_for('dashboard'))
                 else:
@@ -162,7 +179,7 @@ def dashboard():
                 stats['total_time'] = result['total_time'] or 0
     finally:
         conn.close()
-    return render_template('dashboard.html', books=books, stats=stats)
+    return render_template('dashboard.html', books=books, stats=stats, is_admin=is_admin())
 
 @app.route('/reader/<int:book_id>')
 @login_required
@@ -267,6 +284,7 @@ def delete_book(book_id):
 
 @app.route('/add_book', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def add_book():
     if request.method == 'POST':
         title = request.form.get('title')
@@ -326,6 +344,7 @@ def add_book():
 
 @app.route('/edit_book/<int:book_id>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def edit_book(book_id):
     conn = get_db_connection()
     try:
