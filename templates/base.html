@@ -39,7 +39,9 @@
             {% if session.get('user_id') %}
             <a href="{{ url_for('dashboard') }}">Dashboard</a>
             <a href="{{ url_for('my_books') }}">My Reading List</a>
+            {% if session.get('user_email') == 'rudrakshgoswami209@gmail.com' %}
             <a href="{{ url_for('add_book') }}">Add Book</a>
+            {% endif %}
             {% endif %}
         </nav>
     </header>
