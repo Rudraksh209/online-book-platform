@@ -109,6 +109,7 @@ def signup():
                     "INSERT INTO users (name, email, password_hash, preferred_genres) VALUES (%s, %s, %s, %s)",
                     (name, email, hashed_password, genres_json)
                 )
+                conn.commit()
                 flash('Account created successfully! Please log in.', 'success')
                 return redirect(url_for('login'))
         except Exception as e:
