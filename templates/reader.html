@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ book.title }} - Goodreads Reader{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reader.css') }}">
+{% endblock %}
+{% block content %}
+<div class="reader-toolbar">
+    <div class="toolbar-left">
+        <a href="{{ url_for('dashboard') }}" class="btn">&larr; Back</a>
+        <h3 class="reader-title">{{ book.title }}</h3>
+    </div>
+    <div class="tts-controls">
+        <button id="tts-play" class="btn btn-primary">🔊 Play</button>
+        <button id="tts-pause" class="btn" disabled>⏸ Pause</button>
+        <button id="tts-stop" class="btn" disabled>⏹ Stop</button>
+        <select id="tts-voice" class="form-control" style="width: auto; display: inline-block;"><option value="">Default Voice</option></select>
+        <select id="tts-rate" class="form-control" style="width: auto; display: inline-block;">
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2.0x</option>
+        </select>
+    </div>
+    <div class="reader-settings">
+        <button id="font-increase" class="btn">A+</button>
+        <button id="font-decrease" class="btn">A-</button>
+    </div>
+</div>
+<div class="reader-container" id="reader-container">
+    <div class="book-pages-wrapper">
+        <div class="page-nav prev-page" id="prev-btn">&lt;</div>
+        <div class="book-spread">
+            <div class="page-content" id="page-display"></div>
+        </div>
+        <div class="page-nav next-page" id="next-btn">&gt;</div>
+    </div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+        <div class="page-indicator">Page <span id="current-page-num">1</span> of {{ pages|length }}</div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    const bookId = {{ book.id }};
+    const lastPageRead = {{ last_page }};
+    const bookPagesData = [
+        {% for page in pages %}
+            {{ page.text_content|tojson|safe }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+</script>
+<script src="{{ url_for('static', filename='js/reader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tts.js') }}"></script>
+{% endblock %}

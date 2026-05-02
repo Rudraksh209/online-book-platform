@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <title>{% block title %}Goodreads Book Platform{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="top-bar">
+            <div class="brand-container">
+                <a href="{{ url_for('index') }}" class="brand">
+                    Goodreads
+                    <span>Free eBooks Library</span>
+                </a>
+            </div>
+            <div class="search-bar">
+                <form action="{{ url_for('catalog') }}" method="GET" style="display:flex;">
+                    <input type="text" name="q" placeholder="Quick search">
+                    <button type="submit">Go!</button>
+                </form>
+            </div>
+            <div class="auth-buttons">
+                {% if not session.get('user_id') %}
+                    <a href="{{ url_for('login') }}" class="btn" style="background:#f0ad4e; color:white;">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn" style="background:#5bc0de; color:white;">Register</a>
+                {% else %}
+                    <span style="color:white; margin-right: 10px;">Hi, {{ session.get('user_name') }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn" style="background:#d9534f; color:white;">Logout</a>
+                {% endif %}
+            </div>
+        </div>
+        <nav class="nav-links">
+            <a href="{{ url_for('about') }}">About ▼</a>
+            <a href="{{ url_for('catalog') }}">Library Catalog</a>
+            {% if session.get('user_id') %}
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('my_books') }}">My Reading List</a>
+            <a href="{{ url_for('add_book') }}">Add Book</a>
+            {% endif %}
+        </nav>
+    </header>
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+    <footer style="background: var(--bg-color); padding: 2rem 5%; border-top: 1px solid var(--border-color); text-align:center; font-size: 0.9rem; margin-top: 2rem;">
+        <p>Goodreads Project - A platform for reading and exploring literature.</p>
+        <p>&copy; 2026 Rudraksh, Pankaj, Ankit.</p>
+    </footer>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

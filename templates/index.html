@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="text-align: center; padding: 4rem 2rem;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem;">Welcome to Goodreads</h1>
+    <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 2rem auto;">
+        Your personal library and reading companion. Upload books, listen with AI-powered text-to-speech, and track your reading journey.
+    </p>
+    <div>
+        <a href="{{ url_for('signup') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem; margin-right: 1rem;">Start Reading Now</a>
+        <a href="{{ url_for('catalog') }}" class="btn" style="font-size: 1.2rem; padding: 1rem 2rem; background: #ddd; color: var(--text-color);">Browse Library</a>
+    </div>
+</div>
+{% endblock %}

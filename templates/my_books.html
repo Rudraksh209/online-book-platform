@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}My Reading List - Goodreads{% endblock %}
+{% block extra_css %}
+<style>
+    .list-container { max-width: 900px; margin: 0 auto; }
+    .book-row { display: flex; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.3s ease; }
+    .book-row:hover { transform: translateY(-4px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+    .book-cover { width: 120px; height: 180px; object-fit: cover; background: var(--border-color); border: 1px solid var(--border-color); margin-right: 2rem; }
+    .book-info { flex: 1; display: flex; flex-direction: column; }
+    .book-title { font-size: 1.4rem; color: var(--primary-color); margin: 0 0 0.5rem 0; font-family: var(--font-heading); }
+    .book-meta { color: var(--text-muted); margin-bottom: 1rem; }
+    .progress-stats { background: var(--header-bg); padding: 1rem; border-radius: 4px; display: flex; gap: 2rem; margin-top: auto; }
+    .stat { font-size: 0.9rem; }
+    .stat strong { color: var(--primary-color); font-size: 1.1rem; }
+    .action-area { display: flex; align-items: center; margin-left: 2rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="list-container">
+    <h2 style="border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; margin-bottom: 2rem;">My Reading List</h2>
+    {% for book in books %}
+    <div class="book-row">
+        {% if book.cover_image_path %}
+            <img src="{{ url_for('uploaded_file', filename=book.cover_image_path) }}" alt="Cover" class="book-cover">
+        {% else %}
+            <div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: var(--border-color);"><span style="color: var(--text-muted); font-style: italic;">No Cover</span></div>
+        {% endif %}
+        <div class="book-info">
+            <h3 class="book-title">{{ book.title }}</h3>
+            <div class="book-meta">by {{ book.author }} | Genre: {{ book.genre }}</div>
+            <p style="font-size: 0.9rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ book.description }}</p>
+            <div class="progress-stats">
+                <div class="stat">Resuming at Page <br><strong>{{ book.last_page_read }}</strong></div>
+                <div class="stat">Time Spent Reading <br><strong>{{ (book.time_spent / 60)|round }} mins</strong></div>
+            </div>
+        </div>
+        <div class="action-area">
+            <a href="{{ url_for('reader', book_id=book.id) }}" class="btn btn-primary" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Continue Reading</a>
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem; background: var(--bg-color); border-radius: 8px;">
+        <h3>You haven't started reading any books yet.</h3>
+        <p>Explore the <a href="{{ url_for('catalog') }}">Library Catalog</a> to find your first read!</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

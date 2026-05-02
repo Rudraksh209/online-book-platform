@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Goodreads{% endblock %}
+{% block extra_css %}
+<style>
+    .dashboard-header { background: var(--header-bg); padding: 2rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .stats-container { display: flex; gap: 2rem; }
+    .stat-box { background: var(--card-bg); padding: 1rem 1.5rem; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; border-left: 4px solid var(--primary-color); }
+    .stat-number { font-size: 2rem; font-weight: bold; color: var(--primary-color); font-family: var(--font-heading); }
+    .stat-label { color: var(--text-muted); font-size: 0.9rem; }
+    .section-title { font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; display: inline-block; }
+    .book-list { background: var(--bg-color); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem; }
+    .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.5rem; }
+    .book-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.8rem; display: flex; flex-direction: column; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease; position: relative; overflow: hidden; }
+    .book-item:hover { transform: translateY(-8px); box-shadow: 0 12px 20px rgba(0,0,0,0.15); }
+    .book-cover { width: 100%; height: 240px; object-fit: cover; background: var(--border-color); margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 4px; transition: transform 0.5s ease; }
+    .book-item:hover .book-cover { transform: scale(1.05); }
+    .book-title { font-weight: bold; color: var(--primary-color); font-size: 1rem; margin-bottom: 0.3rem; line-height: 1.2; }
+    .book-author { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .btn-read { margin-top: auto; padding: 0.4rem; font-size: 0.9rem; text-align: center; background: var(--primary-color); color: white; border-radius: 3px; display: block; }
+    .btn-read:hover { background: var(--secondary-color); text-decoration: none; }
+    .delete-form { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border-radius: 50%; z-index: 10; }
+    .delete-btn { background: #D90429; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .delete-btn:hover { background: #ef233c; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h2 style="margin-top:0;">Welcome back, {{ session.get('user_name') }}!</h2>
+        <div id="quote-container" style="margin-top: 1rem; padding-left: 1rem; border-left: 3px solid var(--accent-color); font-style: italic; color: var(--text-muted); transition: opacity 0.5s ease; opacity: 0; min-height: 50px; max-width: 500px;">
+            <p id="quote-text" style="margin:0 0 0.5rem 0;">"Loading wisdom..."</p>
+            <p id="quote-author" style="margin:0; font-size: 0.9rem; font-weight: bold; color: var(--primary-color);">-</p>
+        </div>
+    </div>
+    <div class="stats-container">
+        <div class="stat-box"><div class="stat-number">{{ stats.total_books }}</div><div class="stat-label">Books Started</div></div>
+        <div class="stat-box"><div class="stat-number">{{ (stats.total_time / 60)|round(1) }}</div><div class="stat-label">Minutes Read</div></div>
+    </div>
+</div>
+<div class="book-list">
+    <h3 class="section-title">Recently Added to Library</h3>
+    <div class="book-grid">
+        {% for book in books %}
+        <div class="book-item">
+            {% if book.added_by == session.get('user_id') %}
+            <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this book?');">
+                <button type="submit" class="delete-btn" title="Delete Book">X</button>
+            </form>
+            {% endif %}
+            {% if book.cover_image_path %}
+                <img src="{{ url_for('uploaded_file', filename=book.cover_image_path) }}" alt="Cover" class="book-cover">
+            {% else %}
+                <div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: var(--border-color);"><span style="color: var(--text-muted); font-style: italic;">No Cover</span></div>
+            {% endif %}
+            <div class="book-title">{{ book.title }}</div>
+            <div class="book-author">by {{ book.author }}</div>
+            <a href="{{ url_for('reader', book_id=book.id) }}" class="btn-read">Read Online</a>
+        </div>
+        {% else %}
+        <p>No books found. <a href="{{ url_for('add_book') }}">Be the first to add one!</a></p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const quotes = [
+            { text: "A reader lives a thousand lives before he dies. The man who never reads lives only one.", author: "George R.R. Martin" },
+            { text: "There is no friend as loyal as a book.", author: "Ernest Hemingway" },
+            { text: "I have always imagined that Paradise will be a kind of library.", author: "Jorge Luis Borges" },
+            { text: "Books are a uniquely portable magic.", author: "Stephen King" },
+            { text: "Reading is essential for those who seek to rise above the ordinary.", author: "Jim Rohn" },
+            { text: "A book is a dream that you hold in your hand.", author: "Neil Gaiman" }
+        ];
+        const quoteContainer = document.getElementById('quote-container');
+        const quoteText = document.getElementById('quote-text');
+        const quoteAuthor = document.getElementById('quote-author');
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        quoteText.textContent = `"${randomQuote.text}"`;
+        quoteAuthor.textContent = `- ${randomQuote.author}`;
+        setTimeout(() => { quoteContainer.style.opacity = "1"; }, 100);
+    });
+</script>
+{% endblock %}
