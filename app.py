@@ -7,15 +7,15 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from db import init_db, get_db_connection
 from pdf_extractor import extract_text_from_pdf
-
+ 
 load_dotenv()
-
+ 
 # Admin Configuration
 ADMIN_EMAIL = 'rudrakshgoswami209@gmail.com'
-
+ 
 def is_admin():
     return session.get('user_email') == ADMIN_EMAIL
-
+ 
 def admin_required(f):
     from functools import wraps
     @wraps(f)
@@ -25,22 +25,22 @@ def admin_required(f):
             return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
     return decorated_function
-
+ 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key_for_dev')
 app.config['UPLOAD_FOLDER'] = os.path.join('uploads')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 # 50MB max upload
-
+ 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
+ 
 # Auto-initialize database tables on startup
 try:
     init_db()
     print('Database tables initialized!')
 except Exception as e:
     print(f'DB init warning: {e}')
-
+ 
 # --- Authentication Decorator ---
 def login_required(f):
     @wraps(f)
@@ -50,16 +50,16 @@ def login_required(f):
             return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
-
+ 
 # --- Routes ---
 @app.route('/')
 def index():
     return render_template('index.html')
-
+ 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
+ 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -72,19 +72,28 @@ def login():
                 cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
                 user = cursor.fetchone()
                 
-                if user and bcrypt.checkpw(password, user['password_hash'].encode('utf-8')):
-                    session['user_id'] = user['id']
-                    session['user_name'] = user['name']
-                    session['user_email'] = user['email']
-                    flash('Login successful!', 'success')
-                    return redirect(url_for('dashboard'))
+                if user:
+                    try:
+                        password_hash = user['password_hash']
+                        if isinstance(password_hash, str):
+                            password_hash = password_hash.encode('utf-8')
+                        if bcrypt.checkpw(password, password_hash):
+                            session['user_id'] = user['id']
+                            session['user_name'] = user['name']
+                            session['user_email'] = user['email']
+                            flash('Login successful!', 'success')
+                            return redirect(url_for('dashboard'))
+                        else:
+                            flash('Invalid email or password.', 'danger')
+                    except Exception as e:
+                        flash('Login error. Please try again.', 'danger')
                 else:
                     flash('Invalid email or password.', 'danger')
         finally:
             conn.close()
             
     return render_template('login.html')
-
+ 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -118,17 +127,17 @@ def signup():
             conn.close()
             
     return render_template('signup.html')
-
+ 
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'success')
     return redirect(url_for('index'))
-
+ 
 @app.route('/about')
 def about():
     return render_template('about.html')
-
+ 
 @app.route('/catalog')
 def catalog():
     conn = get_db_connection()
@@ -140,7 +149,7 @@ def catalog():
     finally:
         conn.close()
     return render_template('catalog.html', books=books)
-
+ 
 @app.route('/my_books')
 @login_required
 def my_books():
@@ -159,7 +168,7 @@ def my_books():
     finally:
         conn.close()
     return render_template('my_books.html', books=books)
-
+ 
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -181,7 +190,7 @@ def dashboard():
     finally:
         conn.close()
     return render_template('dashboard.html', books=books, stats=stats, is_admin=is_admin())
-
+ 
 @app.route('/reader/<int:book_id>')
 @login_required
 def reader(book_id):
@@ -213,7 +222,7 @@ def reader(book_id):
     last_page = user_book['last_page_read'] if user_book else 1
         
     return render_template('reader.html', book=book, pages=pages, last_page=last_page)
-
+ 
 @app.route('/api/update_progress', methods=['POST'])
 @login_required
 def update_progress():
@@ -249,7 +258,7 @@ def update_progress():
         conn.close()
         
     return jsonify({'success': True})
-
+ 
 @app.route('/delete_book/<int:book_id>', methods=['POST'])
 @login_required
 def delete_book(book_id):
@@ -282,7 +291,7 @@ def delete_book(book_id):
         conn.close()
         
     return redirect(url_for('dashboard'))
-
+ 
 @app.route('/add_book', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -342,7 +351,7 @@ def add_book():
             conn.close()
             
     return render_template('add_book.html')
-
+ 
 @app.route('/edit_book/<int:book_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -383,7 +392,7 @@ def edit_book(book_id):
         conn.close()
         
     return render_template('edit_book.html', book=book)
-
+ 
 if __name__ == '__main__':
     # Initialize DB on startup (optional, can also run db.py directly)
     try:
@@ -393,3 +402,4 @@ if __name__ == '__main__':
         print(f"Warning: Could not connect to database on startup. Error: {e}")
     
     app.run(debug=False, port=5000)
+ 
